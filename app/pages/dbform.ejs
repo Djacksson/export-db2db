@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Database Configuration</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+
+    .container {
+      width: 500px;
+      margin: 30px auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 3px;
+      font-size: small;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 5px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      background-color: rgba(245, 245, 245, 0.97);
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #connect_message {
+      font-size: small;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Database Configuration</h1>
+    <div>
+      <label for="host">Host:</label>
+      <input type="text" id="host" name="host" value="<%= sourceConfig.host %>">
+
+      <label for="user">User:</label>
+      <input type="text" id="user" name="user" value="<%= sourceConfig.user %>">
+
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" value="<%= sourceConfig.password %>">
+
+      <label for="database">Database:</label>
+      <input type="text" id="database" name="database" value="<%= sourceConfig.database %>">
+
+      <button type="submit" onclick="onConnectDB()">Submit</button>
+
+      <p id="connect_message" style="display: none;">Message</p>
+    </div>
+  </div>
+</body>
+
+<script>
+  function onConnectDB() {
+    const configDB = {
+      host: document.getElementById('host').value,
+      user: document.getElementById('user').value,
+      password: document.getElementById('password').value,
+      database: document.getElementById('database').value,
+    }
+
+    if (configDB.host !== '' && configDB.user !== '') {
+      fetch('/api/connect_db', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(configDB)
+      })
+        .then(response => response.json())
+        .then((data) => {
+          if (data.config) {
+            document.getElementById('connect_message').textContent = "Connexion DB success !";
+            document.getElementById('connect_message').style.color = "green";
+            document.getElementById('connect_message').style.display = 'block';
+
+            setTimeout(() => {window.location.href = '/api/request' }, 1000);
+          } else {
+            document.getElementById('connect_message').textContent = "Configuration DB incorrect !";
+            document.getElementById('connect_message').style.color = "red";
+            document.getElementById('connect_message').style.display = 'block';
+          }
+        })
+        .catch(error => {
+          document.getElementById('connect_message').textContent = "Error connecting to DB !";
+          document.getElementById('connect_message').style.color = "red";
+          document.getElementById('connect_message').style.display = 'block';
+        });
+    } else {
+      document.getElementById('connect_message').textContent = "Champ vide !";
+      document.getElementById('connect_message').style.color = "red";
+      document.getElementById('connect_message').style.display = 'block';
+    }
+  }
+</script>
+
+</html>

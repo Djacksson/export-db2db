@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Database Configuration</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+      display: flex;
+    }
+
+    .container {
+      width: 70%;
+      margin: 30px auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar{
+      width: 20%;
+      margin: 30px auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    table {
+      font-family: arial;
+      max-width: 100%;
+      background-color: transparent;
+      border-collapse: collapse;
+      border-spacing: 0;
+    }
+
+    .table {
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    .table th,
+    .table td {
+      font-weight: normal;
+      font-size: 12px;
+      padding: 8px 15px;
+      line-height: 20px;
+      text-align: left;
+      vertical-align: middle;
+      border-top: 1px solid #dddddd;
+    }
+
+    .table thead th {
+      background: #eeeeee;
+      vertical-align: bottom;
+    }
+
+    .table tbody>tr:nth-child(odd)>td,
+    .table tbody>tr:nth-child(odd)>th {
+      background-color: #fafafa;
+    }
+
+    .table .t-small {
+      width: 5%;
+    }
+
+    .table .t-medium {
+      width: 15%;
+    }
+
+    .table .t-status {
+      font-weight: bold;
+    }
+
+    .table .t-active {
+      color: #46a546;
+    }
+
+    .table .t-inactive {
+      color: #e00300;
+    }
+
+    .table .t-draft {
+      color: #f89406;
+    }
+
+    .table .t-scheduled {
+      color: #049cdb;
+    }
+
+    /* Small Sizes */
+    @media (max-width: 480px) {
+      .table-action thead {
+        display: none;
+      }
+
+      .table-action tr {
+        border-bottom: 1px solid #dddddd;
+      }
+
+      .table-action td {
+        border: 0;
+      }
+
+      .table-action td:not(:first-child) {
+        display: block;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <table class="table table-action">
+      <thead>
+        <tr>
+          <th class="t-small"></th>
+          <th class="t-small">ID</th>
+          <th class="t-medium">Date</th>
+          <th>Info</th>
+          <th class="t-medium">State</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <td><label><input type="checkbox"></label></td>
+          <td>1</td>
+          <td>27/09/2013</td>
+          <td>One little text</td>
+          <td class="t-status t-active">Active</td>
+        </tr>
+        <tr>
+          <td><label><input type="checkbox"></label></td>
+          <td>1</td>
+          <td>27/09/2013</td>
+          <td>One little text</td>
+          <td class="t-status t-inactive">Inactive</td>
+        </tr>
+        <tr>
+          <td><label><input type="checkbox"></label></td>
+          <td>1</td>
+          <td>27/09/2013</td>
+          <td>One little text</td>
+          <td class="t-status t-draft">Draft</td>
+        </tr>
+        <tr>
+          <td><label><input type="checkbox"></label></td>
+          <td>1</td>
+          <td>27/09/2013</td>
+          <td>One little text</td>
+          <td class="t-status t-scheduled">Scheduled</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="sidebar">
+    Hello
+  </div>
+
+</body>
+
+</html>

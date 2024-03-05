@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Query Form</title>
+    <style>
+        body {
+            padding-left: 30px;
+            padding-right: 30px;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        form {
+            margin-top: 10px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: small;
+            font-weight: bold;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            box-sizing: border-box;
+            height: 80px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #table-container {
+            width: 100%;
+            height: 330px;
+            overflow-x: scroll;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        #data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: Arial, sans-serif;
+            overflow-x: scroll;
+        }
+
+        #table-header th {
+            padding: 5px;
+            background-color: #f2f2f2;
+            cursor: pointer;
+        }
+
+        #table-header th:hover {
+            background: rgb(184, 197, 228);
+        }
+
+        #table-body {
+            overflow-y: scroll;
+            max-height: 300px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 3px;
+            text-align: left;
+            font-size: small;
+        }
+
+        #no-data-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #ccc;
+            height: 90%;
+            margin: auto;
+        }
+
+        #no-data-container p {
+            font-size: 20px;
+            color: #666;
+        }
+
+        #check_syntax {
+            font-size: small;
+            padding-bottom: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <select onchange="onSelectTable()" id="select_table" name="table">
+            <option value="" style="color: rgb(169, 165, 165);">Selectionner la table</option>
+            <% db_table.forEach(table=> { %>
+                <option value="<%= table.table_name %>">
+                    <%= table.table_name %>
+                </option>
+                <% }); %>
+        </select>
+
+        <div id="table-container">
+            <table id="data-table">
+                <thead id="table-header"></thead>
+                <tbody id="table-body"></tbody>
+
+                <div id="no-data-container">
+                    <p>No data available</p>
+                </div>
+            </table>
+        </div>
+
+        <label for="query">Enter your SQL query:</label>
+        <textarea id="content_query" oninput="onWriteSQL()" name="query"
+            placeholder="SELECT * FROM table_name;"></textarea>
+        <div id="check_syntax"></div>
+
+        <button id="btn_query" onclick="onExecuteREQ()" type="button">Execute Query</button>
+    </div>
+</body>
+
+<script>
+    function onSelectTable() {
+        const tableName = { table_name: document.getElementById('select_table').value }
+
+        if (tableName.table_name !== '') {
+            document.getElementById("no-data-container").style.display = 'none';
+
+            fetch('/api/show_table', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(tableName),
+            })
+                .then(response => response.json())
+                .then((data) => {
+                    if (data.table_data[0]) {
+                        const columns = Object.keys(data.table_data[0]);
+
+                        const tableHeader = `<tr>${columns.map(column => `<th>${column}</th>`).join('')}</tr>`;
+
+                        const tableRows = data.table_data.map(row => {
+                            return `<tr>${columns.map(column => `<td>${row[column]}</td>`).join('')}</tr>`;
+                        }).join('');
+
+                        document.getElementById('table-header').innerHTML = tableHeader;
+                        document.getElementById('table-body').innerHTML = tableRows;
+
+                        const thElements = document.querySelectorAll('#table-header th');
+                        thElements.forEach(th => {
+                            th.addEventListener('click', () => {
+                                const column = th.textContent;
+                                addNewChar(tableName.table_name + `.` + column)
+                            });
+                        });
+                    }
+                    else {
+                        document.getElementById("#no-data-container").style.display = 'flex';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error submitting form:', error);
+                });
+        }
+    }
+
+    function addNewChar(character) {
+        var textarea = document.getElementById('content_query');
+        var currentValue = textarea.value;
+        var newValue = currentValue + " " + character;
+        textarea.value = newValue;
+    }
+
+    let timeout;
+    function onWriteSQL() {
+        const sqlQueryArea = document.getElementById('content_query');
+        const checkSyntax = document.getElementById('check_syntax');
+        const btnSubmit = document.getElementById('btn_query');
+
+        checkSyntax.style.display = "none";
+        clearTimeout(timeout);
+
+        timeout = setTimeout(() => {
+            if (sqlQueryArea.value !== '') {
+                // const isValidSyntax = checkSQLSyntax(sqlQueryArea.value);
+
+                fetch('/api/check_query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sqlQuery: sqlQueryArea.value })
+                })
+                    .then(response => response.json())
+                    .then((data) => {
+                        checkSyntax.style.display = "block";
+                        checkSyntax.textContent = data.check_value ? 'Requete SQL Valide !' : 'Requete SQL Invalide !';
+                        checkSyntax.style.color = data.check_value ? '#45a049' : '#fc2f18';
+                    })
+                    .catch(error => {
+                        console.error('Error submitting form:', error);
+                    });
+            } else {
+                checkSyntax.style.display = "none";
+            }
+        }, "500");
+    }
+
+    function onExecuteREQ() {
+        const request = { query_content: document.getElementById('content_query').textContent }
+
+        if (request.query_content !== '') {
+            fetch('/api/excute_query', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(request)
+            })
+                .then(response => response.json())
+                .then((data) => {
+                    console.log(data);
+
+
+                })
+                .catch(error => {
+                    console.error('Error submitting form:', error);
+                });
+        }
+    }
+
+</script>
+
+</html>

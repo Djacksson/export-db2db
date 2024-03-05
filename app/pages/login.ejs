@@ -1,0 +1,163 @@
+<!doctype html>
+<!-- 
+* Massy server
+* Version: 2.1
+* Author: Alexis Luna
+* Website: https://github.com/alexis-luna/bootstrap-simple-admin-template
+-->
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>
+        <%= lang==='en' ? `Login | Massy` : `Se connecter | Massy` %>
+    </title>
+    <link rel="icon" href="../../images/favicon.ico" type="image/x-icon" />
+    <link href="../../assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../../css/style.css" rel="stylesheet">
+</head>
+
+<body class="wrapper">
+    <div class="card">
+        <div class="card-body text-center">
+            <div class="text-center mb-2">
+                <img src="../../images/Cosit-logo_web.png" alt="" style="width: 290px">
+                <div class="text-center name mt-2">
+                    <%= lang==='en' ? `Massy Admin Portal` : `Portail Administration Massy` %>
+                </div>
+            </div>
+
+            <div class="px-3">
+                <div class="mb-1 text-start">
+                    <label for="email" class="form-label">
+                        <%= lang==='en' ? `Email adress` : `Adresse e-mail` %>
+                    </label>
+                    <input type="email" id="emailManager" class="form-control form-control-sm"
+                        placeholder="<%= lang==='en' ? `Enter Email` : `Entrez votre e-mail` %>" required>
+                </div>
+                <div class="mb-1 text-start">
+                    <label for="password" class="form-label">
+                        <%= lang==='en' ? `Password` : `Mot de passe` %>
+                    </label>
+                    <input type="password" id="passwordManager" class="form-control form-control-sm"
+                        placeholder="<%= lang==='en' ? `Enter Password` : `Entrer le mot de passe` %>" required>
+                </div>
+                <div class="mb-1 text-start">
+                    <div class="form-check">
+                        <input class="form-check-input" id="remCheckbox" name="check1" type="checkbox" />
+                        <label class="form-check-label cursor-pointer" for="check1">
+                            <%= lang==='en' ? `Remember me on this device` : `Se souvenir de moi sur cet appareil` %>
+                        </label>
+                    </div>
+                </div>
+                <div id="loadingMessage" class="hideMassage text-center mt-1 text-success"></div>
+
+                <button id="submitButton" type="submit" onclick="submitManagerForm()"
+                    class="btn btn-primary shadow-2 mb-3">
+                    <%= lang==='en' ? `Login` : `Se connecter` %>
+                </button>
+            </div>
+
+            <a href="/manager/forgot-password<%= lang==='en' ? `/en` : `/fr` %>">
+                <%= lang==='en' ? `Forgot password ?` : `Mot de passe oublié ?` %>
+            </a>
+            <div id="errorMessage" class="hideMassage text-center mt-2 text-danger"></div>
+        </div>
+    </div>
+
+    <script src="../../assets/vendor/jquery/jquery.min.js"></script>
+    <script src="../../assets/vendor/bootstrap/js/bootstrap.min.js"></script>
+</body>
+
+<script>
+    function setCookie(name, value, daysToExpire) {
+        const expirationDate = new Date();
+        expirationDate.setDate(expirationDate.getDate() + daysToExpire);
+        const cookieValue = encodeURIComponent(value) + (daysToExpire ? '; expires=' + expirationDate.toUTCString() : '');
+        document.cookie = name + '=' + cookieValue + '; path=/';
+    }
+
+    function getCookie(name) {
+        const cookies = document.cookie.split(';');
+
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(name + '=')) {
+                return decodeURIComponent(cookie.substring(name.length + 1));
+            }
+        }
+        return null;
+    }
+
+    async function submitManagerForm() {
+        const email = document.getElementById('emailManager').value;
+        const password = document.getElementById('passwordManager').value;
+        const rememberMe = document.querySelector('#remCheckbox').checked;;
+
+        const formData = {
+            email: email,
+            password: password,
+        }
+
+        await fetch('/manager/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', },
+            body: JSON.stringify(formData),
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                if (data.admin_token) {
+                    setCookie('aid_token', data.admin_token, 1)
+
+                    fetch('/manager/api/ad-protected', {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json', 'adx-auth-token': data.admin_token, },
+                    })
+                        .then((response) => response.json())
+                        .then((dataAdmin) => {
+                            localStorage.setItem('aid_data', JSON.stringify(dataAdmin.admin))
+                            setTimeout(() => { window.location.href = "/manager<%= lang==='en' ? `/en` : `/fr` %>"; }, 500);
+                        })
+                        .catch(error => {
+                            document.getElementById('errorMessage').textContent = "<%= lang==='en' ? `Login failed, try again !` : `La connexion a échoué, réessayez !` %>";
+                            document.getElementById('errorMessage').style.display = 'block';
+                            document.getElementById('submitButton').style.display = 'block';
+                        });
+                } else {
+                    document.getElementById('errorMessage').textContent = data.message;
+                    document.getElementById('errorMessage').style.display = 'block';
+                    document.getElementById('submitButton').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                document.getElementById('errorMessage').textContent = "<%= lang==='en' ? `Error submitting form, please try again !` : `Erreur lors de la soumission du formulaire, veuillez réessayer !` %>";
+                document.getElementById('errorMessage').style.display = 'block';
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const token = getCookie('aid_token');
+
+        if (token) {
+            fetch('/manager/api/ad-protected', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json', 'adx-auth-token': token, },
+            })
+                .then((response) => response.json())
+                .then((dataAdmin) => {
+                    localStorage.setItem('aid_data', JSON.stringify(dataAdmin.admin))
+                    document.getElementById('loadingMessage').textContent = "<%= lang==='en' ? `Connexion successfully etablished !` : `Connexion établie avec succès !` %>";
+                    setTimeout(() => window.location.href = '/manager' + "<%= lang==='en' ? `/en` : `/fr` %>", 1000);
+                })
+                .catch(error => {
+                    document.getElementById('errorMessage').textContent = "<%= lang==='en' ? `Login failed, try again !` : `La connexion a échoué, réessayez !` %>";
+                    document.getElementById('errorMessage').style.display = 'block';
+                    document.getElementById('submitButton').style.display = 'block';
+                });
+        }
+    });
+</script>
+
+</html>

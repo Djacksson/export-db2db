@@ -1,0 +1,119 @@
+<div class="modal fade" id="largeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content bg-light">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel3">Ajouter Nouveau BD</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Basic with Icons -->
+                    <div class="col-xxl">
+                        <div class="card">
+                            <div class="card-header d-flex align-items-center justify-content-start">
+                                <h5 class="mb-0">Veuillez entrer les informations de la base de données</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <label class="col-sm-2 col-form-label" for="host">Host</label>
+                                    <div class="col-sm-10">
+                                        <div class="input-group input-group-merge">
+                                            <span id="host2" class="input-group-text"><i
+                                                    class="bx bx-server"></i></span>
+                                            <input type="text" class="form-control" id="host" placeholder="localhost"
+                                                aria-label="localhost" aria-describedby="host2" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-2 col-form-label" for="user">User</label>
+                                    <div class="col-sm-10">
+                                        <div class="input-group input-group-merge">
+                                            <span id="user0" class="input-group-text"><i class="bx bx-user"></i></span>
+                                            <input type="text" id="user" class="form-control" placeholder="root"
+                                                aria-label="root" aria-describedby="user0" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-2 col-form-label" for="password">Password</label>
+                                    <div class="col-sm-10">
+                                        <div class="input-group input-group-merge">
+                                            <span id="password0" class="input-group-text"><i
+                                                    class='bx bx-lock-open-alt'></i></span>
+                                            <input type="text" id="password" class="form-control" placeholder="********"
+                                                aria-label="**********" aria-describedby="password0" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label class="col-sm-2 col-form-label" for="database">Base de données</label>
+                                    <div class="col-sm-10">
+                                        <div class="input-group input-group-merge">
+                                            <span id="database0" class="input-group-text"><i
+                                                    class="bx bx-data"></i></span>
+                                            <input type="text" id="database" class="form-control" placeholder="bd_name"
+                                                aria-label="bd_name" aria-describedby="database0" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-0 text-center">
+                                    <p id="connect_message" style="display: none;">Message</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">
+                    Close
+                </button>
+                <button type="button" onclick="onConnectDB()" class="btn btn-primary">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function onConnectDB() {
+      const configDB = {
+        host: document.getElementById('host').value,
+        user: document.getElementById('user').value,
+        password: document.getElementById('password').value,
+        database: document.getElementById('database').value,
+      }
+  
+      if (configDB.host !== '' && configDB.user !== '') {
+        fetch('/api/connect_db', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(configDB)
+        })
+          .then(response => response.json())
+          .then((data) => {
+            if (data.config) {
+              document.getElementById('connect_message').textContent = "Connexion DB success !";
+              document.getElementById('connect_message').style.color = "green";
+              document.getElementById('connect_message').style.display = 'block';
+  
+              setTimeout(() => {window.location.href = '/api/request' }, 1000);
+            } else {
+              document.getElementById('connect_message').textContent = "Configuration DB incorrect !";
+              document.getElementById('connect_message').style.color = "red";
+              document.getElementById('connect_message').style.display = 'block';
+            }
+          })
+          .catch(error => {
+            document.getElementById('connect_message').textContent = "Error connecting to DB !";
+            document.getElementById('connect_message').style.color = "red";
+            document.getElementById('connect_message').style.display = 'block';
+          });
+      } else {
+        document.getElementById('connect_message').textContent = "Champ vide !";
+        document.getElementById('connect_message').style.color = "red";
+        document.getElementById('connect_message').style.display = 'block';
+      }
+    }
+  </script>

@@ -1,8 +1,9 @@
-<div class="modal fade" id="addBD" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="updateDB" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content bg-light">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel3">Ajouter Nouveau BD</h5>
+                <h5 class="modal-title" id="exampleModalLabel3">Editer la Base de données: <span id="idUpdateDB"></span>
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -69,14 +70,19 @@
                 <button type="button" id="btnclose" class="btn btn-label-secondary" data-bs-dismiss="modal">
                     Close
                 </button>
-                <button type="button" onclick="onAddDB()" class="btn btn-primary">Save changes</button>
+                <button type="button" onclick="onConnectDB()" class="btn btn-primary">Save changes</button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    function onAddDB() {
+    $('#updateDB').on('shown.bs.modal', async function (event) {
+        const databaseId = $(event.relatedTarget).data('id')
+        document.getElementById('idUpdateDB').textContent = databaseId;
+    })
+
+    function onConnectDB() {
         const configDB = {
             host: document.getElementById('host').value,
             user: document.getElementById('user').value,
@@ -94,28 +100,28 @@
                 .then(response => response.json())
                 .then((data) => {
                     if (data.config) {
-                        document.getElementById('add_message').textContent = "Connexion DB success !";
-                        document.getElementById('add_message').style.color = "green";
-                        document.getElementById('add_message').style.display = 'block';
+                        document.getElementById('connect_message').textContent = "Connexion DB success !";
+                        document.getElementById('connect_message').style.color = "green";
+                        document.getElementById('connect_message').style.display = 'block';
                         setTimeout(() => { window.location.reload() }, 1000);
 
-                        // setTimeout(() => { $('#addBD').modal('hide'); }, 1000);
+                        // setTimeout(() => { $('#updateDB').modal('hide'); }, 1000);
                         // setTimeout(() => { window.location.href = '/request' }, 1000);
                     } else {
-                        document.getElementById('add_message').textContent = "Configuration DB incorrect !";
-                        document.getElementById('add_message').style.color = "red";
-                        document.getElementById('add_message').style.display = 'block';
+                        document.getElementById('connect_message').textContent = "Configuration DB incorrect !";
+                        document.getElementById('connect_message').style.color = "red";
+                        document.getElementById('connect_message').style.display = 'block';
                     }
                 })
                 .catch(error => {
-                    document.getElementById('add_message').textContent = "Error connecting to DB !";
-                    document.getElementById('add_message').style.color = "red";
-                    document.getElementById('add_message').style.display = 'block';
+                    document.getElementById('connect_message').textContent = "Error connecting to DB !";
+                    document.getElementById('connect_message').style.color = "red";
+                    document.getElementById('connect_message').style.display = 'block';
                 });
         } else {
-            document.getElementById('add_message').textContent = "Champ vide !";
-            document.getElementById('add_message').style.color = "red";
-            document.getElementById('add_message').style.display = 'block';
+            document.getElementById('connect_message').textContent = "Champ vide !";
+            document.getElementById('connect_message').style.color = "red";
+            document.getElementById('connect_message').style.display = 'block';
         }
     }
 </script>

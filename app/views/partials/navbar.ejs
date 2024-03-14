@@ -19,7 +19,9 @@
 
         <ul class="navbar-nav flex-row align-items-center ms-auto">
 
-
+            <!-- ############################ Shortcuts ############################ -->
+            <!-- ############################ Shortcuts ############################ -->
+            <!-- ############################ Shortcuts ############################ -->
             <li class="nav-item dropdown-shortcuts navbar-dropdown dropdown me-2 me-xl-0">
                 <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown"
                     data-bs-auto-close="outside" aria-expanded="false">
@@ -73,7 +75,9 @@
 
 
 
-
+            <!-- ############################ Notification ############################ -->
+            <!-- ############################ Notification ############################ -->
+            <!-- ############################ Notification ############################ -->
             <li class="nav-item dropdown-notifications navbar-dropdown dropdown me-3 me-xl-1">
                 <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown"
                     data-bs-auto-close="outside" aria-expanded="false">
@@ -166,12 +170,14 @@
 
 
 
-            
-            <!-- User -->
+
+            <!-- ############################ User ############################ -->
+            <!-- ############################ User ############################ -->
+            <!-- ############################ User ############################ -->
             <li class="nav-item navbar-dropdown dropdown-user dropdown">
                 <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
                     <div class="avatar avatar-online">
-                        <img src="../assets/img/avatars/1.png" alt class="w-px-40 h-auto rounded-circle" />
+                        <img id="useravatar1" alt class="w-px-35 h-auto rounded-circle" />
                     </div>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end">
@@ -180,25 +186,18 @@
                             <div class="d-flex">
                                 <div class="flex-shrink-0 me-3">
                                     <div class="avatar avatar-online">
-                                        <img src="../assets/img/avatars/1.png" alt
-                                            class="w-px-40 h-auto rounded-circle" />
+                                        <img id="useravatar2" alt class="w-px-35 h-auto rounded-circle" />
                                     </div>
                                 </div>
                                 <div class="flex-grow-1">
-                                    <span class="fw-semibold d-block">John Doe</span>
-                                    <small class="text-muted">Admin</small>
+                                    <span id="username" class="fw-semibold d-block"></span>
+                                    <small id="usertype" class="text-muted">Admin</small>
                                 </div>
                             </div>
                         </a>
                     </li>
                     <li>
                         <div class="dropdown-divider"></div>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="#">
-                            <i class="bx bx-user me-2"></i>
-                            <span class="align-middle">My Profile</span>
-                        </a>
                     </li>
                     <li>
                         <a class="dropdown-item" href="#">
@@ -210,10 +209,10 @@
                         <div class="dropdown-divider"></div>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="auth-login-basic.html">
+                        <button onclick="onLogout()" class="dropdown-item" href="auth-login-basic.html">
                             <i class="bx bx-power-off me-2"></i>
                             <span class="align-middle">Log Out</span>
-                        </a>
+                        </button>
                     </li>
                 </ul>
             </li>
@@ -221,3 +220,88 @@
         </ul>
     </div>
 </nav>
+
+<script>
+    function getCookie(name) {
+        const cookies = document.cookie.split(';');
+
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(name + '=')) {
+                return decodeURIComponent(cookie.substring(name.length + 1));
+            }
+        }
+        return null;
+    }
+
+    function generateAvatar(text, foregroundColor = "white", backgroundColor = "gray") {
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+
+        canvas.width = 200;
+        canvas.height = 200;
+
+        context.fillStyle = backgroundColor;
+        context.fillRect(0, 0, canvas.width, canvas.height);
+
+        context.font = "bold 100px Assistant";
+        context.fillStyle = foregroundColor;
+        context.textAlign = "center";
+        context.textBaseline = "middle";
+        context.fillText(text.toUpperCase(), canvas.width / 2, canvas.height / 2);
+
+        return canvas.toDataURL("image/png");
+    }
+
+    function formatDate(dateInput) {
+        let date = new Date(dateInput);
+        let year = new Intl.DateTimeFormat('en', { year: 'numeric' }).format(date);
+        let month = new Intl.DateTimeFormat('en', { month: 'short' }).format(date);
+        let day = new Intl.DateTimeFormat('en', { day: '2-digit' }).format(date);
+        return `${day}-${month}-${year}`;
+    }
+
+
+    //######################################################################
+    //######################################################################
+    const adminData = JSON.parse(localStorage.getItem('connect_data'));
+    const adminToken = getCookie('connect_token');
+
+    if (adminData) {
+        document.getElementById('username').textContent = adminData.nom + ' ' + adminData.prenom;
+        document.getElementById("useravatar1").src = generateAvatar(adminData.nom[0] + adminData.prenom[0]);
+        document.getElementById("useravatar2").src = generateAvatar(adminData.nom[0] + adminData.prenom[0]);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        if (adminData && adminToken) {
+            document.getElementById('username').textContent = adminData.nom + ' ' + adminData.prenom;
+            document.getElementById("useravatar1").src = generateAvatar(adminData.nom[0] + adminData.prenom[0]);
+            document.getElementById("useravatar2").src = generateAvatar(adminData.nom[0] + adminData.prenom[0]);
+        } else {
+            if (adminToken) {
+                fetch('/user/protected', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json', 'usr-auth-token': adminToken, },
+                })
+                    .then((response) => response.json())
+                    .then((result) => {
+                        localStorage.setItem('connect_data', JSON.stringify(result.data))
+                    })
+                    .catch(error => {
+                        window.location.href = '/';
+                    });
+            } else {
+                window.location.href = '/';
+            }
+        }
+    });
+
+    //######################################################################
+    //######################################################################
+    function onLogout() {
+        window.location.href = "/";
+        localStorage.removeItem('connect_data')
+        document.cookie = "connect_token" + '=; expires=Thu, 01 Jan 1900 00:00:00 UTC; path=/;';
+    }
+</script>

@@ -1,0 +1,63 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String   @id @default(uuid())
+  nom      String?
+  prenom   String?
+  login    String   @unique
+  email    String?
+  password String?
+  type     String?
+  status   Boolean? @default(false)
+
+  dateCreate DateTime @default(now())
+  dateUpdate DateTime @updatedAt
+
+  clusters Cluster[]
+}
+
+model Cluster {
+  id       String   @id @default(uuid())
+  host     String?
+  user     String?
+  password String?
+  database String?
+  status   Boolean? @default(false)
+
+  dateCreate DateTime @default(now())
+  dateUpdate DateTime @updatedAt
+
+  requests Request_Register[]
+
+  User   User?   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId String?
+
+  @@unique([host, user, database])
+}
+
+model Request_Register {
+  id           String  @id @default(uuid())
+  viewName     String?
+  database     String?
+  queryContent String?
+  userId       String?
+
+  dateCreate DateTime @default(now())
+  dateUpdate DateTime @updatedAt
+
+  Cluster   Cluster? @relation(fields: [clusterId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  clusterId String?
+}

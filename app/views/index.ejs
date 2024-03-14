@@ -72,16 +72,16 @@
           <div class="card col-sm-5">
             <div class="card-body">
               
-              <h4 class="my-4 text-center h2">Se connecter a Expo Data</h4>
-              <form id="formAuthentication" class="mb-3" action="index.html" method="POST">
+              <h4 class="my-4 text-center h3">Se connecter a Expo Data</h4>
+              <div class="mb-3 form-control shadow-sm">
                 <div class="mb-3">
-                  <label for="email" class="form-label">Email ou Username</label>
+                  <label for="login" class="form-label">Login</label>
                   <input
                     type="text"
-                    class="form-control"
-                    id="email"
-                    name="email-username"
-                    placeholder="Entrer votre email"
+                    class="form-control form-control-sm"
+                    id="login"
+                    name="login-username"
+                    placeholder="Entrer votre login"
                     autofocus
                   />
                 </div>
@@ -96,7 +96,7 @@
                     <input
                       type="password"
                       id="password"
-                      class="form-control"
+                      class="form-control form-control-sm"
                       name="password"
                       placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;"
                       aria-describedby="password"
@@ -110,12 +110,12 @@
                     <label class="form-check-label" for="remember-me"> Se souvenir de moi </label>
                   </div>
                 </div>
-                <div class="mb-3">
-                  <button class="btn btn-primary d-grid w-100" type="submit" onclick="submitLoginForm()">Valider</button>
-                </div>
-              </form>
 
-              <p class="text-center">
+                <p id="errorMessage" class="text-danger"></p>
+                <button class="btn btn-primary d-grid w-100 mb-3" type="submit" onclick="submitLoginForm()">Valider</button>
+              </div>
+
+              <p class="text-center mb-0">
                 <span>Nouveau sur la plateform ?</span>
                 <a href="/register"><span>Créer un compte !</span></a>
               </p>
@@ -147,13 +147,34 @@
     <script async defer src="https://buttons.github.io/buttons.js"></script>
 
     <script>
+      function setCookie(name, value, daysToExpire) {
+        const expirationDate = new Date();
+        expirationDate.setDate(expirationDate.getDate() + daysToExpire);
+        const cookieValue = encodeURIComponent(value) + (daysToExpire ? '; expires=' + expirationDate.toUTCString() : '');
+        document.cookie = name + '=' + cookieValue + '; path=/';
+      }
+
+      function getCookie(name) {
+        const cookies = document.cookie.split(';');
+
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.startsWith(name + '=')) {
+            return decodeURIComponent(cookie.substring(name.length + 1));
+          }
+        }
+        return null;
+      }
+
+      //################################################################
+      //################################################################
       async function submitLoginForm() {
-        const email = document.getElementById('email').value;
+        const login = document.getElementById('login').value;
         const password = document.getElementById('password').value;
         const rememberMe = document.querySelector('#remember-me').checked;
 
         const formData = {
-          email: email,
+          login: login,
           password: password,
         }
 
@@ -165,26 +186,25 @@
           .then((response) => response.json())
           .then((res) => {
             if (res.data) {
-              setCookie('aid_token', res.data, 1)
+              console.log(res.data);
+              setCookie('connect_token', res.data, 1)
 
               fetch('/user/protected', {
                 method: 'GET',
-                headers: { 'Content-Type': 'application/json', 'adx-auth-token': res.data, },
+                headers: { 'Content-Type': 'application/json', 'usr-auth-token': res.data, },
               })
                 .then((response) => response.json())
                 .then((result) => {
-                  localStorage.setItem('aid_data', JSON.stringify(result.data))
+                  localStorage.setItem('connect_data', JSON.stringify(result.data))
                   setTimeout(() => { window.location.href = "/dashboard"; }, 500);
                 })
                 .catch(error => {
                   document.getElementById('errorMessage').textContent = "La connexion a échoué, réessayez !";
                   document.getElementById('errorMessage').style.display = 'block';
-                  document.getElementById('submitButton').style.display = 'block';
                 });
             } else {
               document.getElementById('errorMessage').textContent = data.message;
               document.getElementById('errorMessage').style.display = 'block';
-              document.getElementById('submitButton').style.display = 'block';
             }
           })
           .catch(error => {
@@ -193,24 +213,25 @@
           });
       }
 
+
       document.addEventListener('DOMContentLoaded', function () {
-        const token = getCookie('aid_token');
+        const token = getCookie('connect_token');
 
         if (token) {
-          fetch('/manager/api/ad-protected', {
+          fetch('/user/protected', {
             method: 'GET',
-            headers: { 'Content-Type': 'application/json', 'adx-auth-token': token, },
+            headers: { 'Content-Type': 'application/json', 'usr-auth-token': token, },
           })
             .then((response) => response.json())
-            .then((dataAdmin) => {
-              localStorage.setItem('aid_data', JSON.stringify(dataAdmin.admin))
-              document.getElementById('loadingMessage').textContent = "Connexion établie avec succès !";
-              setTimeout(() => window.location.href = '/dashboard', 1000);
+            .then((result) => {
+              localStorage.setItem('connect_data', JSON.stringify(result.data))
+              document.getElementById('errorMessage').textContent = "Connexion établie avec succès !";
+              document.getElementById('errorMessage').className = "text-success";
+              setTimeout(() => window.location.href = '/dashboard', 2000);
             })
             .catch(error => {
-              document.getElementById('errorMessage').textContent = "La connexion a échoué, réessayez !";
+              // document.getElementById('errorMessage').textContent = "La connexion a échoué, réessayez !";
               document.getElementById('errorMessage').style.display = 'block';
-              document.getElementById('submitButton').style.display = 'block';
             });
         }
       });

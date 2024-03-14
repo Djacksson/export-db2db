@@ -12,18 +12,20 @@ const parser = new Parser();
 
 const { verifyToken } = require('../middlewares/user.middleware');
 const UserController = require('../controllers/user.controller');
-const classController = new UserController()
+const classController = new UserController();
 
 //###########################################################
 // Route d'inscription
 router.post('/register', async (req, res) => {
     try {
-        const existUser = await classController.getUserByEmail(req.body.email);
+        const existUser = await classController.GetDataByLogin(req.body.login);
 
         if (!existUser) {
             hashpwd = await bcrypt.hash(req.body.password, 10)
             dataUser = {
-                username: req.body.username,
+                nom: req.body.nom,
+                prenom: req.body.prenom,
+                login: req.body.login,
                 email: req.body.email,
                 password: hashpwd,
             }
@@ -33,11 +35,12 @@ router.post('/register', async (req, res) => {
                 return res.json({ message: 'User successfully inserted', data: result, status: "success" });
             }
 
-            return res.json({ message: 'Insert failed => Error server !', data: existUser, status: "error" });
+            return res.json({ message: 'Insert failed => Error server !', data: null, status: "error" });
         }
 
-        return res.json({ message: 'Insert failed => User exist !', data: existUser, status: "error" });
+        return res.json({ message: 'Insert failed => User already exist !', data: existUser, status: "error" });
     } catch (error) {
+        console.log(error);
         return res.status(500).json({ message: 'Une erreur est survenue lors de l\'enrégistrement du User.' });
     }
 });
@@ -47,10 +50,10 @@ router.post('/register', async (req, res) => {
 //###########################################################
 // Route de connexion
 router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
+    const { login, password } = req.body;
 
     try {
-        const existUser = await classController.getUserByEmail(email);
+        const existUser = await classController.GetDataByLogin(login);
 
         if (existUser) {
             const checkPassword = await bcrypt.compareSync(password, existUser.password);
@@ -59,12 +62,13 @@ router.post('/login', async (req, res) => {
                 return res.json({ message: 'Invalid password !', data: null, status: "error"  });
             }
         
-            const token = jwt.sign({ userId: existUser.id, email: existUser.email }, process.env.SECRET_KEY);
+            const token = jwt.sign({ userId: existUser.id, login: existUser.login }, process.env.SECRET_TOKEN_KEY);
             return res.json({ message: 'Login successfully done', data: token, status: "success" });
         }
 
         return res.json({ message: 'Login failed => User not exist !', data: existUser, status: "error" });
     } catch (error) {
+        console.log(error);
         return res.status(500).json({ message: 'Une erreur est survenue lors du login du User.' });
     }
     
@@ -76,14 +80,15 @@ router.post('/login', async (req, res) => {
 // Vérifie le token reçu par l'utilisateur
 router.get('/protected', verifyToken, async (req, res) => {
     try {
-        const existUser = await classController.getUserByEmail(req.user.email);
+        const existUser = await classController.GetDataByLogin(req.user.login);
 
         if (existUser) {
             return res.json({ message: 'Verify successfully done', data: existUser, status: "success" });
         }
 
-        return res.json({ message: 'Verify failed => User not exist !', data: existUser, status: "error" });
+        return res.json({ message: 'Verify failed => User not exist !', data: null, status: "error" });
     } catch (error) {
+        console.log(error);
         return res.status(500).json({ message: 'Une erreur est survenue lors du login du User.' });
     }
 });
@@ -93,7 +98,7 @@ router.get('/protected', verifyToken, async (req, res) => {
 //###########################################################
 router.post('/logout', verifyToken, async (req, res) => {
     try {
-        const existUser = await classController.getUserByEmail(req.user.email);
+        const existUser = await classController.GetDataByEmail(req.user.email);
 
         if (existUser) {
             return res.json({ message: 'Logout successfully done', data: existUser, status: "success" });
@@ -101,6 +106,7 @@ router.post('/logout', verifyToken, async (req, res) => {
 
         return res.json({ message: 'Logout failed => User not exist !', data: existUser, status: "error" });
     } catch (error) {
+        console.log(error);
         return res.status(500).json({ message: 'Une erreur est survenue lors du logout du User.' });
     }
 })

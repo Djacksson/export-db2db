@@ -1,0 +1,79 @@
+<div class="modal fade" id="deleteDB" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-small" role="document">
+        <div class="modal-content bg-light">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel3">Supprimer la Base de données: <span id="idDeleteDB"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Basic with Icons -->
+                    <div class="col-xxl">
+                        <div class="card">
+                            <div class="card-header d-flex align-items-center justify-content-start">
+                                <h5 class="mb-0">Veuillez entrer les informations de la base de données</h5>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="btnclose" class="btn btn-label-secondary" data-bs-dismiss="modal">
+                    Close
+                </button>
+                <button type="button" onclick="onConnectDB()" class="btn btn-primary">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $('#deleteDB').on('shown.bs.modal', async function (event) {
+        const databaseId = $(event.relatedTarget).data('id')
+        document.getElementById('idDeleteDB').textContent = databaseId;
+    })
+
+    function onConnectDB() {
+        const configDB = {
+            host: document.getElementById('host').value,
+            user: document.getElementById('user').value,
+            password: document.getElementById('password').value,
+            database: document.getElementById('database').value,
+            userId: adminData.id
+        }
+
+        if (configDB.host !== '' && configDB.user !== '') {
+            fetch('/data/addCluster', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'usr-auth-token': adminToken, },
+                body: JSON.stringify(configDB)
+            })
+                .then(response => response.json())
+                .then((data) => {
+                    if (data.config) {
+                        document.getElementById('connect_message').textContent = "Connexion DB success !";
+                        document.getElementById('connect_message').style.color = "green";
+                        document.getElementById('connect_message').style.display = 'block';
+                        setTimeout(() => { window.location.reload() }, 1000);
+
+                        // setTimeout(() => { $('#deleteDB').modal('hide'); }, 1000);
+                        // setTimeout(() => { window.location.href = '/request' }, 1000);
+                    } else {
+                        document.getElementById('connect_message').textContent = "Configuration DB incorrect !";
+                        document.getElementById('connect_message').style.color = "red";
+                        document.getElementById('connect_message').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('connect_message').textContent = "Error connecting to DB !";
+                    document.getElementById('connect_message').style.color = "red";
+                    document.getElementById('connect_message').style.display = 'block';
+                });
+        } else {
+            document.getElementById('connect_message').textContent = "Champ vide !";
+            document.getElementById('connect_message').style.color = "red";
+            document.getElementById('connect_message').style.display = 'block';
+        }
+    }
+</script>

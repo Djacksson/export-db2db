@@ -1,0 +1,120 @@
+<div class="modal fade" id="connectDB" tabindex="-1" aria-hidden="true" role="dialog"
+    aria-labelledby="exampleModalLabel">
+    <div class="modal-dialog modal-small" role="document">
+        <div class="modal-content bg-light">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel3">Connecter la Base de données:
+                    <span id="connectDBId" style="display: none;"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Basic with Icons -->
+                    <div class="col-xxl">
+                        <div class="card">
+                            <div class="demo-inline-spacing p-3 table table-hover">
+                                <div class="d-flex justify-content-between border-bottom">
+                                    <div class=" d-flex items-center"><i class="bx bx-tv me-2 p-0"></i>Host</div>
+                                    <div id="hostData"></div>
+                                </div>
+
+                                <div class="d-flex justify-content-between border-bottom">
+                                    <div class=" d-flex items-center"><i class="bx bx-user me-2 p-0"></i>User</div>
+                                    <div id="userData"></div>
+                                </div>
+
+                                <div class="d-flex justify-content-between border-bottom">
+                                    <div class=" d-flex items-center"><i class="bx bx-lock-alt me-2 p-0"></i>Password
+                                    </div>
+                                    <div id="passData"></div>
+                                </div>
+
+                                <div class="d-flex justify-content-between border-bottom">
+                                    <div class=" d-flex items-center"><i class="bx bx-data me-2 p-0"></i>DataBase</div>
+                                    <div id="BDData"></div>
+                                </div>
+
+                                <div class="d-flex justify-content-between border-bottom">
+                                    <div class=" d-flex items-center"><i class="bx bx-time me-2 p-0"></i>Date Création
+                                    </div>
+                                    <div id="dateData"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer justify-content-center m-0">
+                <button type="button" onclick="onConnectDataBase()" class="btn btn-primary">Connexion</button>
+            </div>
+
+            <div class="mb-3 text-center" id="connect_message" style="display: none;"></div>
+        </div>
+    </div>
+</div>
+</div>
+</div>
+
+<script>
+    $('#connectDB').on('shown.bs.modal', async function (event) {
+        const databaseId = $(event.relatedTarget).data('id')
+        document.getElementById('connectDBId').innerHTML = databaseId;
+
+        await fetch('/data/getClusterById', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'usr-auth-token': adminToken, },
+            body: JSON.stringify({ clusterId: databaseId })
+        })
+            .then(response => response.json())
+            .then((result) => {
+                if (result) {
+                    document.getElementById('hostData').textContent = result.data.host;
+                    document.getElementById('userData').textContent = result.data.user;
+                    document.getElementById('passData').textContent = result.data.password;
+                    document.getElementById('BDData').textContent = result.data.database;
+                    document.getElementById('dateData').textContent = formatDate(result.data.dateCreate);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching dataset:', error);
+            });
+    })
+
+    $('#connectDB').on('hide.bs.modal', async function (event) {
+        document.getElementById('connect_message').textContent = "";
+    })
+
+    function onConnectDataBase() {
+        const idBD = document.getElementById('connectDBId').textContent;
+
+        if (idBD !== '') {
+            fetch('/data/connectCluster', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'usr-auth-token': adminToken, },
+                body: JSON.stringify({ clusterId: idBD })
+            })
+                .then(response => response.json())
+                .then((result) => {
+                    if (result) {
+                        console.log(result);
+                        document.getElementById('connect_message').textContent = "Connexion DB success !";
+                        document.getElementById('connect_message').style.color = "green";
+                        document.getElementById('connect_message').style.display = 'block';
+
+                        setTimeout(() => { window.location.href = '/request' }, 700);
+                    } else {
+                        document.getElementById('connect_message').textContent = "Coonexion DB a échoué !";
+                        document.getElementById('connect_message').style.color = "red";
+                        document.getElementById('connect_message').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('connect_message').textContent = "Error connecting to DB !";
+                    document.getElementById('connect_message').style.color = "red";
+                    document.getElementById('connect_message').style.display = 'block';
+                });
+        }
+    }
+</script>

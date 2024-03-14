@@ -10,17 +10,11 @@ const parser = new Parser();
 
 const { verifyToken } = require('../middlewares/user.middleware');
 
-// MySQL connection configurations for source and destination databases
-const destinationConfig = {
-    host: 'destination_host',
-    user: 'destination_user',
-    password: 'destination_password',
-    database: 'destination_database'
-};
-
+const ClusterController = require('../controllers/cluster.controller');
+const classController = new ClusterController()
 
 // Handle form submission
-router.post('/connect_db', (req, res) => {
+router.post('/addCluster', (req, res) => {
     // Retrieve destination database configuration from form data
     const sourceConfig = {
         host: req.body.host,
@@ -37,17 +31,79 @@ router.post('/connect_db', (req, res) => {
             return res.json({ message: "Connexion failed !", db_table: null });
         }
 
-        localStorage.setItem('sourceConfig_JSON', JSON.stringify(sourceConfig));
+        classController.InsertData(req.body);
         return res.json({ message: "Connexion sucess !", config: sourceConfig });
     })
     sourceConnection.end();
 })
 
 
+// Handle form submission
+router.post('/getClusterByUser', verifyToken, async (req, res) => {
+    try {
+        const cluster = await classController.GetDataByUser(req.body.userId);
+
+        if (cluster) {
+            return res.json({ message: 'Data successfully found', data: cluster, status: "success" });
+        }
+
+        return res.json({ message: 'Search failed => Data not exist !', data: null, status: "error" });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: 'Une erreur est survenue lors de la recuperation des cluster.' });
+    }
+})
+
+
+// Handle form submission
+router.post('/getClusterById', verifyToken, async (req, res) => {
+    try {
+        const cluster = await classController.GetDataById(req.body.clusterId);
+
+        if (cluster) {
+            return res.json({ message: 'Data successfully found', data: cluster, status: "success" });
+        }
+
+        return res.json({ message: 'Search failed => Data not exist !', data: null, status: "error" });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: 'Une erreur est survenue lors de la recuperation des cluster.' });
+    }
+})
+
+
+router.post('/connectCluster', verifyToken, async (req, res) => {
+    try {
+        const cluster = await classController.GetDataById(req.body.clusterId);
+
+        if (cluster) {
+            const sourceConfig = {
+                clusterId: cluster.id,
+                dataConfig: {
+                    host: cluster.host,
+                    user: cluster.user,
+                    password: cluster.password,
+                    database: cluster.database
+                }
+            }
+
+            localStorage.setItem('sourceConfig_JSON', JSON.stringify(sourceConfig));
+            await classController.UpdateData({ status: true, id: req.body.clusterId });
+            return res.json({ message: 'Data successfully found', data: cluster, status: "success" });
+        }
+
+        return res.json({ message: 'Search failed => Data not exist !', data: null, status: "error" });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: 'Une erreur est survenue lors de la recuperation des cluster.' });
+    }
+})
+
+
 //###########################################################
-router.post('/show_table', async (req, res) => {
+router.post('/getTableCluster', async (req, res) => {
     const sourceConfig = JSON.parse(localStorage.getItem('sourceConfig_JSON'));
-    const sourceConnection = mysql.createConnection(sourceConfig);
+    const sourceConnection = mysql.createConnection(sourceConfig.dataConfig);
 
     sourceConnection.query(`SELECT * FROM ${req.body.table_name}`, (err, results) => {
         if (err) {
@@ -71,37 +127,82 @@ router.post('/check_query', async (req, res) => {
 })
 
 
-router.post('/excute_query', async (req, res) => {
-    console.log('data', req.body);
+router.post('/executeQuery', async (req, res) => {
+    const sourceConfig = JSON.parse(localStorage.getItem('sourceConfig_JSON'));
+    const sourceConnection = mysql.createConnection(sourceConfig.dataConfig);
 
-    // Create connections to source and destination databases
-    const destinationConnection = mysql.createConnection(destinationConfig);
+    // Execute the query
+    sourceConnection.query(req.body.queryContent, (error, resultTable) => {
+        if (error) {
+            return res.status(500).json({ message: 'Internal Server Error' });
+        }
 
-    // // Name of the view to export and import
-    // const viewName = 'your_view_name';
-
-    // // Export view from source database
-    // exportView(sourceConnection, viewName, (err, createViewSql) => {
-    //     if (err) {
-    //         console.error('Error exporting view:', err);
-    //         res.render('error', { message: 'Error exporting view' });
-    //         return;
-    //     }
-    //     // Import view into destination database
-    //     importView(destinationConnection, viewName, createViewSql, (err) => {
-    //         if (err) {
-    //             console.error('Error importing view:', err);
-    //             res.render('error', { message: 'Error importing view' });
-    //             return;
-    //         }
-    //         res.render('success', { message: 'View export/import completed successfully.' });
-    //     });
-
-    //     res.send('Export operation completed successfully.');
-    // });
+        return res.json({ message: 'All Column !', table_data: resultTable });
+    });
+    sourceConnection.end();
 })
 
 
+router.post('/createView', async (req, res) => {
+    console.log(req.body);
+
+    const sourceConfig = JSON.parse(localStorage.getItem('sourceConfig_JSON'));
+    const sourceConnection = mysql.createConnection(sourceConfig.dataConfig);
+    // const destinationConnection = mysql.createConnection(sourceConfig.dataConfig);
+
+    // Create a view with the retrieved data
+    const createViewQuery = `CREATE OR REPLACE VIEW ${req.body.viewName}_view AS SELECT * FROM (${req.body.queryContent}) AS ${req.body.viewName}_data`;
+    sourceConnection.query(createViewQuery, (err, resultView) => {
+        if (err) {
+            return res.status(500).json({ message: 'Internal Server Error' });
+        }
+        console.log('View created: acteur_view', resultView);
+        return res.json({ message: 'All Column !', data: resultView });
+    });
+    sourceConnection.end();
+})
+
+
+router.post('/transfertData', async (req, res) => {
+    console.log(req.body);
+
+    const sourceConfig = JSON.parse(localStorage.getItem('sourceConfig_JSON'));
+    const sourceConnection = mysql.createConnection(sourceConfig.dataConfig);
+    const destinationConnection = mysql.createConnection(sourceConfig.dataConfig);
+
+    // Export view from source database
+    exportView(sourceConnection, req.body.viewName, (err, createViewSql) => {
+        if (err) {
+            console.error('Error exporting view:', err);
+            return res.status(500).json({ message: 'Internal Server Error' });
+        }
+        // Import view into destination database
+        importView(destinationConnection, req.body.viewName, createViewSql, (err) => {
+            if (err) {
+                console.error('Error importing view:', err);
+                return res.status(500).json({ message: 'Internal Server Error' });
+            }
+            res.render('success', { message: 'View export/import completed successfully.' });
+        });
+
+        res.send('Export operation completed successfully.');
+    });
+})
+
+//###########################################################
+router.post('/logoutCluster', async (req, res) => {
+    try {
+        const sourceConfig = JSON.parse(localStorage.getItem('sourceConfig_JSON'));
+
+        if (sourceConfig.clusterId === req.body.clusterId) {
+            localStorage.removeItem('sourceConfig_JSON');
+            await classController.UpdateData({ status: false, id: sourceConfig.clusterId });
+            return res.json({ message: 'Data successfully found', config: sourceConfig, status: "success" });
+        }
+    } catch (error) {
+        return res.json({ message: 'Error to logout Database !', status: "error" });
+    }
+})
 
 
 module.exports = router;

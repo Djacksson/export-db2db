@@ -81,71 +81,51 @@
 
             <div class="container-xxl flex-grow-1 container-p-y">
                 
-              <div class="card">
-                    <div class="card-header border-bottom d-flex justify-content-between items-center">
-                      <h5 class="card-title">Filtre Recherche</h5>
+              <div class="card mb-2">
+                <div class="row px-2">
+                  <label class="col-sm-2 col-form-label">Filtre Recherche</label>
+                  <div class="col-sm-10">
+                    <div class="d-flex justify-content-end items-center p-1">
+                      <button type="button" 
+                        type="button"
+                        class="btn btn-primary btn-sm mx-2 form-control-sm"
+                        data-bs-toggle="modal"
+                        data-bs-target="#addBD">Ajouter Nouveau
+                      </button>
+                      <%- include('./modals/addBD.ejs') %>
 
-                      <div class="d-flex">
-                        <button type="button" 
-                          class="btn btn-primary mx-2" 
-                          type="button"
-                          class="btn btn-primary"
-                          data-bs-toggle="modal"
-                          data-bs-target="#largeModal">Ajouter Nouveau
-                        </button>
-                        <%- include('./modals/addBD.ejs') %>
-
-                        <div class="navbar-search-wrapper search-input-wrapper">
-                          <input
-                            type="text"
-                            class="form-control search-input container-xxl border-1"
-                            placeholder="Search..."
-                            aria-label="Search..."
-                          />
-                        </div>  
-                      </div>
+                      <div class="navbar-search-wrapper search-input-wrapper">
+                        <input
+                          id="searchInput"
+                          type="text"
+                          class="form-control form-control-sm search-input container-xxl border-1"
+                          placeholder="Recherche..."
+                          aria-label="Recherche..."
+                        />
+                      </div>  
                     </div>
+                </div>
+                </div>
 
-                    <div class="table-responsive text-nowrap" style="min-height: 410px;">
-                      <table class="table table-hover border-top">
-                        <thead class="table-primary shadow-sm">
-                          <tr>
-                            <th>#</th>
-                            <th>Host</th>
-                            <th>User</th>
-                            <th>Password</th>
-                            <th>Database</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                          </tr>
-                        </thead>
+                <div class="table-responsive text-nowrap" style="min-height: 410px;">
+                  <table class="table table-hover border-top">
+                    <thead class="table-primary shadow-sm">
+                      <tr>
+                        <th>#</th>
+                        <th>Host</th>
+                        <th>User</th>
+                        <th>Password</th>
+                        <th>Database</th>
+                        <th>Date Création</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
 
-                        <tbody class="table-border-bottom-0">
-                          <tr>
-                            <td>1</td>
-                            <td>James</td>
-                            <td>admin</td>
-                            <td>none</td>
-                            <td>Status</td>
-                            <td><span class="badge bg-label-success me-1">Connecté</span></td>
-                            <td>
-                              <div class="dropdown">
-                                <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
-                                  <i class="bx bx-dots-vertical-rounded"></i>
-                                </button>
-
-                                <div class="dropdown-menu">
-                                  <a class="dropdown-item" href="javascript:void(0);"><i class="bx bx-window-open me-1"></i> Connecter</a>
-                                  <a class="dropdown-item" href="javascript:void(0);"><i class="bx bx-edit-alt me-1"></i> Modifier</a>
-                                  <a class="dropdown-item" href="javascript:void(0);"><i class="bx bx-trash me-1"></i> Supprimer</a>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
+                    <tbody class="table-border-bottom-0" id="table-body"></tbody>
+                  </table>
+                </div>
+              </div>
             </div>
             <!-- / Content -->
 
@@ -182,5 +162,76 @@
     <script async defer src="https://buttons.github.io/buttons.js"></script>
 
     <!-- Page JS -->
+    <%- include('./modals/connectDB.ejs') %>
+    <%- include('./modals/updateDB.ejs') %>
+    <%- include('./modals/deleteDB.ejs') %>
   </body>
+
+
+
+  <script>
+    $(function () {
+      if (adminData) {
+        $.ajax({
+          url: '/data/getClusterByUser',
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'usr-auth-token': adminToken, },
+          body: JSON.stringify({ userId: adminData.id }),
+          success: function (result) {
+            if (result) {
+              const tableBody = document.getElementById('table-body');
+              const searchInput = document.getElementById('searchInput');
+
+              const filterTable = () => {
+                const searchText = searchInput.value.toLowerCase();
+                result.data.forEach((row, index) => {
+                  const { host, user, password, database } = row;
+                  const rowText = `${host} ${user} ${password} ${database}`.toLowerCase();
+                  const rowElement = tableBody.children[index];
+
+                  if (rowText.includes(searchText)) {
+                    rowElement.style.display = 'table-row';
+                  } else {
+                    rowElement.style.display = 'none';
+                  }
+                });
+              };
+
+              result.data.forEach((row, index) => {
+                const { host, user, password, database, dateCreate, status } = row;
+                const newRow = `
+                        <tr class="border">
+                            <td>${index + 1}</td>
+                            <td>${host}</td>
+                            <td>${user}</td>
+                            <td>${password}</td>
+                            <td>${database}</td>
+                            <td>${formatDate(dateCreate)}</td>
+                            <td><span class="badge me-1 ${status ? 'bg-label-success' : 'bg-label-warning'}">${status ? "Connecté" : "Déconnecté"}</span></td>
+                            <td class="d-flex items-center justify-content-between">
+                              <button data-bs-toggle="modal" data-bs-target="#connectDB" data-id="${row.id}" type="button" class="btn btn-sm rounded-pill btn-icon btn-label-primary">
+                                <span class='tf-icons bx bx-window-open'></span>
+                              </button >
+
+                              <button data-bs-toggle="modal" data-bs-target="#updateDB" data-id="${row.id}" type="button" class="btn btn-sm rounded-pill btn-icon btn-label-warning">
+                                <span class="tf-icons bx bx-edit-alt"></span>
+                              </button>
+
+                              <button data-bs-toggle="modal" data-bs-target="#deleteDB" data-id="${row.id}" type="button" class="btn btn-sm rounded-pill btn-icon btn-label-danger">
+                                <span class="tf-icons bx bx-trash"></span>
+                              </button>
+                            </td >
+                        </tr >
+                    `;
+                tableBody.innerHTML += newRow;
+              })
+
+              searchInput.addEventListener('input', filterTable);
+            }
+          },
+          error: function (err) { console.error('Error fetching dataset:', err); }
+        });
+      }
+    });
+  </script>
 </html>

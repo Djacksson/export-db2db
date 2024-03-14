@@ -72,16 +72,40 @@
           <div class="card col-sm-5">
             <div class="card-body">
               
-              <h4 class="my-4 text-center h2">S'enregister sur Expo Data</h4>
-              <form id="formAuthentication" class="mb-3" action="index.html" method="POST">
+              <h4 class="my-4 text-center h3">S'enregister sur Expo Data</h4>
+              <div class="mb-3 form-control shadow-sm">
+                <div class="d-flex items-center justify-content-between">
+                  <div class="mb-3">
+                    <label for="nom" class="form-label">Nom</label>
+                    <input
+                      type="text"
+                      class="form-control form-control-sm"
+                      id="nom"
+                      name="nom"
+                      placeholder="Entrer votre nom"
+                      autofocus
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <label for="prenom" class="form-label">Prénom</label>
+                    <input
+                      type="text"
+                      class="form-control form-control-sm"
+                      id="prenom"
+                      name="prenom"
+                      placeholder="Entrer votre prénom"
+                      autofocus
+                    />
+                  </div>
+                </div>
                 <div class="mb-3">
-                  <label for="username" class="form-label">Nom Utilisateur</label>
+                  <label for="login" class="form-label">Login</label>
                   <input
                     type="text"
-                    class="form-control"
-                    id="username"
-                    name="username"
-                    placeholder="Entrer votre nom utilisateur"
+                    class="form-control form-control-sm"
+                    id="login"
+                    name="login"
+                    placeholder="Entrer votre pseudo"
                     autofocus
                   />
                 </div>
@@ -89,7 +113,7 @@
                   <label for="email" class="form-label">Email</label>
                   <input 
                     type="text" 
-                    class="form-control" 
+                    class="form-control form-control-sm" 
                     id="email" 
                     name="email" 
                     placeholder="Entrer votre email" 
@@ -101,7 +125,7 @@
                     <input
                       type="password"
                       id="password"
-                      class="form-control"
+                      class="form-control form-control-sm"
                       name="password"
                       placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;"
                       aria-describedby="password"
@@ -112,17 +136,17 @@
 
                 <div class="mb-3">
                   <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="terms-conditions" onclick="onAcceptPolicy()" name="terms" />
-                    <label class="form-check-label" for="terms-conditions">
-                      J'accepte les
-                      <a href="javascript:void(0);">termes d'utilisation !</a>
-                    </label>
+                    <input class="form-check-input" type="checkbox" id="terms-conditions" name="terms" />
+                    <label class="form-check-label" for="terms-conditions">J'accepte les </label>
+                    <a target="_blank" href="javascript:void(0);">termes d'utilisation !</a>
                   </div>
                 </div>
-                <button id="btnSubmitRegister" class="btn btn-primary d-grid w-100">S'enregister</button>
-              </form>
 
-              <p class="text-center">
+                <p id="errorMessage" class="text-danger"></p>
+                <button id="btnSubmitRegister" onclick="submitRegisterForm()" class="btn btn-primary d-grid w-100 mb-3" disabled>S'enregister</button>
+              </div>
+
+              <p class="text-center mb-0">
                 <span>Déjà un compte ?</span>
                 <a href="/"><span>Se connecter</span></a>
               </p>
@@ -146,7 +170,7 @@
     <!-- Vendors JS -->
 
     <!-- Main JS -->
-    <script src="../assets/js/main.js"></script>
+    <!-- <script src="../assets/js/main.js"></script> -->
 
     <!-- Page JS -->
 
@@ -154,13 +178,20 @@
     <script async defer src="https://buttons.github.io/buttons.js"></script>
 
     <script>
+      const btnSubmit = document.getElementById('btnSubmitRegister');
+      checkbox = document.querySelector('#terms-conditions');
+
       async function submitRegisterForm() {
-        const username = document.getElementById('username').value;
+        const nom = document.getElementById('nom').value;
+        const prenom = document.getElementById('prenom').value;
+        const login = document.getElementById('login').value;
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
 
         const formData = {
-          username: username,
+          nom: nom,
+          prenom: prenom,
+          login: login,
           email: email,
           password: password,
         }
@@ -172,8 +203,12 @@
         })
           .then((response) => response.json())
           .then((res) => {
-            if (res.data) {
+            if (res.data && res.status === "success") {
               setTimeout(() => { window.location.href = "/"; }, 500);
+            } else if (res.data && res.status === "error") {
+              document.getElementById('errorMessage').textContent = "Pseudo déjà existant !";
+              document.getElementById('errorMessage').style.display = 'block';
+              document.getElementById('submitButton').style.display = 'block';
             } else {
               document.getElementById('errorMessage').textContent = res.message;
               document.getElementById('errorMessage').style.display = 'block';
@@ -186,17 +221,13 @@
           });
       }
 
-      function onAcceptPolicy() {
-        const accept = document.querySelector('#terms-conditions').checked;
-
-        if(accept){
-          document.querySelector('#btnSubmitRegister').checked = true;
-        }else{
-          document.querySelector('#btnSubmitRegister').checked = false;
+      checkbox.addEventListener('change', e => {
+        if (e.target.checked) {
+          btnSubmit.disabled = false;
+        } else {
+          btnSubmit.disabled = true;
         }
-      }
-
-
+      });
     </script>
   
   </body>

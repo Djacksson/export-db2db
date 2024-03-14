@@ -2,7 +2,7 @@
     <div class="app-brand demo">
         <a href="index.html" class="app-brand-link">
             <span class="app-brand-logo demo">
-                <i class='bx bxs-data bx-lg' ></i>
+                <i class='bx bxs-data bx-lg'></i>
             </span>
             <span class="app-brand-text text-capitalize demo menu-text fw-bolder ms-2">Expo Data</span>
         </a>
@@ -16,28 +16,28 @@
 
     <ul class="menu-inner py-1">
         <!-- Dashboard -->
-        <li class="menu-item active">
+        <li class="menu-item" id="dashboard">
             <a href="/dashboard" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-home-circle"></i>
                 <div data-i18n="Analytics">Tableaux de bord</div>
             </a>
         </li>
 
-        <li class="menu-item">
+        <li class="menu-item" id="managedb">
             <a href="/managedb" class="menu-link">
                 <i class='menu-icon tf-icons bx bx-data'></i>
                 <div data-i18n="Analytics">Base de données</div>
             </a>
         </li>
 
-        <li class="menu-item">
+        <li class="menu-item" id="request">
             <a href="/request" class="menu-link">
                 <i class='menu-icon tf-icons bx bx-expand-horizontal'></i>
                 <div data-i18n="Analytics">Réquetes</div>
             </a>
         </li>
 
-        <li class="menu-item">
+        <li class="menu-item" id="backup">
             <a href="/backup" class="menu-link">
                 <i class='menu-icon tf-icons bx bx-save'></i>
                 <div data-i18n="Analytics">Sauvegarde</div>
@@ -45,3 +45,20 @@
         </li>
     </ul>
 </aside>
+
+<script>
+    const URL_data = window.location.href.split('http://localhost:3000/')[1];
+
+    if(URL_data === "dashboard"){
+        document.getElementById("dashboard").className = "menu-item active"
+    }
+    if(URL_data === "managedb"){
+        document.getElementById("managedb").className = "menu-item active"
+    }
+    if(URL_data === "request"){
+        document.getElementById("request").className = "menu-item active"
+    }
+    if(URL_data === "backup"){
+        document.getElementById("backup").className = "menu-item active"
+    }
+</script>

@@ -162,36 +162,75 @@
                   <textarea  oninput="onWriteSQL()" placeholder="SELECT * FROM table_name;" class="form-control p-2" id="queryTextarea" rows="3"></textarea>
                 </div>
                 
-                <div class="m-2 d-flex">
-                  <!-- <button 
-                    data-bs-toggle="modal" 
-                    data-bs-target="#previewQuery"
-                    type="button" 
-                    id="submitQuery" 
-                    class="btn btn-sm btn-primary">Exécuter
-                  </button> -->
-
-                  <div id="accordionIcon" class="accordion mt-3 accordion-without-arrow">
-                    <div class="accordion-item card">
-                      <h2 class="accordion-header text-body d-flex justify-content-between" id="accordionIconOne">
-                        <button
-                          type="button"
-                          class="accordion-button collapsed"
-                          data-bs-toggle="collapse"
-                          data-bs-target="#accordionIcon-1"
-                          aria-controls="accordionIcon-1"
-                        >
-                        Exécuter
-                        </button>
-                  <div id="check_syntax" class="text-center form-control-sm"></div>
-
-                      </h2>
+                <div class="m-2">
+                  <div id="accordionIcon" class="accordion accordion-without-arrow">
+                    <div class="accordion-item card bg-light">
+                      <div class="accordion-header text-body d-flex justify-content-between items-center p-1 rounded-1" id="accordionIconOne">
+                        <div class="card w-10">
+                          <button
+                            id="submitQuery" 
+                            type="button"
+                            class="collapsed btn btn-sm btn-primary p-1 m-1"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#accordionIcon-1"
+                            aria-controls="accordionIcon-1"
+                            disabled
+                          >
+                            Exécuter Requête
+                          </button>
+                        </div>
+                        <div id="check_syntax" class="text-end p-1"></div>
+                      </div>
 
                       <div id="accordionIcon-1" class="accordion-collapse collapse" data-bs-parent="#accordionIcon">
                         <div class="accordion-body">
-                          Lemon drops chocolate cake gummies carrot cake chupa chups muffin topping. Sesame snaps icing
-                          marzipan gummi bears macaroon dragée danish caramels powder. Bear claw dragée pastry topping
-                          soufflé. Wafer gummi bears marshmallow pastry pie.
+                          <div class="rounded-1 mt-1">
+                            <div class="row">
+                              <div class="col-lg-4 mb-4">
+                                <div class="card">
+                                  <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                      <div class="d-flex flex-column">
+                                        Hello
+                                      </div>
+                                      <div id="leadsReportChart"></div>
+                                    </div>
+
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="col-lg-8">
+                                <div class="card">
+                                  <div class="card-body row g-4">
+                                    <div class="col-md-6 pe-md-4 card-separator">
+                                      hola
+                                    </div>
+
+                                    <div class="col-md-6 ps-md-4">
+                                      HI
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              
+                            </div>
+                          </div>
+
+                          <div id="table-container" class="table-responsive text-nowrap">
+                            <table id="data-table" class="table table-hover border-top">
+                                <thead id="table-header-view" class="table-primary shadow-sm"></thead>
+                                <tbody id="table-body-view" class="table-border-bottom-0"></tbody>
+                                <div id="noViewTab" class="text-center h1 p-5" style="min-height: 200px;">
+                                    <div class="d-flex justify-content-center">
+                                        <div class="sk-bounce sk-primary">
+                                            <div class="sk-bounce-dot"></div>
+                                            <div class="sk-bounce-dot"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </table>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -240,8 +279,6 @@
 
     <!-- Place this tag in your head or just before your close body tag. -->
     <script async defer src="https://buttons.github.io/buttons.js"></script>
-
-    <%- include('./modals/previewQuery.ejs') %>
   </body>
 
   <script>
@@ -329,7 +366,9 @@
 
 
     document.getElementById('submitQuery').addEventListener('click', () => {
+      document.getElementById('accordionIcon-1').className = "accordion-collapse collapse show";
       let query_content = document.getElementById('queryTextarea').value;
+
       if (query_content.trim() !== '') {
         const dataQuery = {
           clusterId: `<%= clusterId %>`,
@@ -338,15 +377,53 @@
           database: `<%= db_name %>`
         }
 
-        document.getElementById('submitQuery').setAttribute("data-query", JSON.stringify(dataQuery));
-        query_content = "";
+        onPreviewQuery(dataQuery)
       }
       else {
         document.getElementById('check_syntax').style.color = '#fc2f18';
         document.getElementById('check_syntax').textContent = "Champ invalide !";
-        document.getElementById('submitQuery').setAttribute("data-query", "");
       }
     });
+
+
+    function onPreviewQuery(dataQuery) {
+      if (dataQuery) {
+        fetch('/data/executeQuery', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'usr-auth-token': adminToken, },
+          body: JSON.stringify(dataQuery),
+        })
+          .then(response => response.json())
+          .then((data) => {
+            if (data.table_data[0]) {
+              document.getElementById("noViewTab").style.display = 'none';
+              const columns = Object.keys(data.table_data[0]);
+              const tableHeader = `<tr>${columns.map(column => `<th>${column}</th>`).join('')}</tr>`;
+
+              const tableRows = data.table_data.map(row => {
+                return `<tr>${columns.map(column => `<td class="p-1">${row[column]}</td>`).join('')}</tr>`;
+              }).join('');
+
+              document.getElementById('table-header-view').innerHTML = tableHeader;
+              document.getElementById('table-body-view').innerHTML = tableRows;
+
+              const thElements = document.querySelectorAll('#table-header-view th');
+              thElements.forEach(th => {
+                th.addEventListener('click', () => {
+                  const column = th.textContent;
+                  addNewChar(tableName.table_name + `.` + column)
+                });
+              });
+            }
+            else {
+              document.getElementById("#noViewTab").style.display = 'flex';
+            }
+          })
+          .catch(error => {
+            console.error('Error submitting form:', error);
+          });
+      }
+    }
 
 
     function onDecoCluster() {

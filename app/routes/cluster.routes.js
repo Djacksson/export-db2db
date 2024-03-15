@@ -128,18 +128,22 @@ router.post('/check_query', async (req, res) => {
 
 
 router.post('/executeQuery', async (req, res) => {
-    const sourceConfig = JSON.parse(localStorage.getItem('sourceConfig_JSON'));
-    const sourceConnection = mysql.createConnection(sourceConfig.dataConfig);
+    try {
+        const sourceConfig = JSON.parse(localStorage.getItem('sourceConfig_JSON'));
+        const sourceConnection = mysql.createConnection(sourceConfig.dataConfig);
 
-    // Execute the query
-    sourceConnection.query(req.body.queryContent, (error, resultTable) => {
-        if (error) {
-            return res.status(500).json({ message: 'Internal Server Error' });
-        }
+        // Execute the query
+        sourceConnection.query(req.body.queryContent, (error, resultTable) => {
+            if (error) {
+                return res.status(500).json({ message: 'Internal Server Error' });
+            }
 
-        return res.json({ message: 'All Column !', table_data: resultTable });
-    });
-    sourceConnection.end();
+            return res.json({ message: 'All Column !', table_data: resultTable });
+        });
+        sourceConnection.end();
+    } catch (error) {
+        return res.json({ message: 'All Column !', table_data: [] });
+    }
 })
 
 

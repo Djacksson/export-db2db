@@ -73,8 +73,9 @@
     <style>
       #table-container {
             width: 100%;
-            height: 280px;
+            height: 250px;
             overflow-x: scroll;
+            padding: 0;
         }
 
         #data-table {
@@ -164,59 +165,28 @@
                 
                 <div class="m-2">
                   <div id="accordionIcon" class="accordion accordion-without-arrow">
-                    <div class="accordion-item card bg-light">
-                      <div class="accordion-header text-body d-flex justify-content-between items-center p-1 rounded-1" id="accordionIconOne">
+                    <div class="accordion-item bg-light">
+
+                      <div class="accordion-header text-body d-flex justify-content-between items-center rounded-1" id="accordionIconOne">
                         <div class="card w-10">
                           <button
+                            href="#resultQuery"
                             id="submitQuery" 
                             type="button"
-                            class="collapsed btn btn-sm btn-primary p-1 m-1"
+                            class="collapsed btn btn-sm btn-primary m-1"
                             data-bs-toggle="collapse"
                             data-bs-target="#accordionIcon-1"
                             aria-controls="accordionIcon-1"
                             disabled
-                          >
-                            Exécuter Requête
+                            >
+                              Exécuter Requête
                           </button>
                         </div>
                         <div id="check_syntax" class="text-end p-1"></div>
                       </div>
 
-                      <div id="accordionIcon-1" class="accordion-collapse collapse" data-bs-parent="#accordionIcon">
-                        <div class="accordion-body">
-                          <div class="rounded-1 mt-1">
-                            <div class="row">
-                              <div class="col-lg-4 mb-4">
-                                <div class="card">
-                                  <div class="card-body">
-                                    <div class="d-flex justify-content-between">
-                                      <div class="d-flex flex-column">
-                                        Hello
-                                      </div>
-                                      <div id="leadsReportChart"></div>
-                                    </div>
-
-                                  </div>
-                                </div>
-                              </div>
-                              <div class="col-lg-8">
-                                <div class="card">
-                                  <div class="card-body row g-4">
-                                    <div class="col-md-6 pe-md-4 card-separator">
-                                      hola
-                                    </div>
-
-                                    <div class="col-md-6 ps-md-4">
-                                      HI
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              
-                            </div>
-                          </div>
-
+                      <div id="accordionIcon-1" class="accordion-collapse collapse show" data-bs-parent="#accordionIcon">
+                        <div class="accordion-body px-0 py-2">
                           <div id="table-container" class="table-responsive text-nowrap">
                             <table id="data-table" class="table table-hover border-top">
                                 <thead id="table-header-view" class="table-primary shadow-sm"></thead>
@@ -231,6 +201,102 @@
                                 </div>
                             </table>
                           </div>
+
+                          <div class="rounded-1 mt-2">
+                            <div class="row">
+                              <div class="col-md-5">
+                                <div class="form-check custom-option custom-option-basic border-0 shadow-sm">
+                                  <label class="form-check-label custom-option-content pt-1 pb-0 rounded-1" for="savaCurrBD">
+                                    <input name="customRadioTemp" class="form-check-input" type="radio" value="" id="savaCurrBD" checked/>
+                                    <span class="custom-option-header">
+                                      <span class="text-primary">Stocker dans la base de données actuelle !</span>
+                                    </span>
+                                  </label>
+
+                                  <div class="custom-option-body px-3 pb-3 form-control-sm">
+                                    <label for="tabName">Table</label>
+                                    <input
+                                      id="tabName"
+                                      type="text"
+                                      name="tabName"
+                                      class="form-control form-control-sm px-2 container-xxl border-1"
+                                      placeholder="nom de la table..."
+                                      aria-label="nom de la table..."
+                                    />
+                                    <button type="button" class="btn btn-sm btn-primary mt-2" disabled>Valider</button>
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="col-md-7">
+                                <div class="form-check custom-option custom-option-basic border-0 shadow-sm">
+                                  <label class="form-check-label custom-option-content pt-1 pb-0 rounded-1" for="savaExtBD">
+                                    <input name="customRadioTemp" class="form-check-input" type="radio" value="" id="savaExtBD"/>
+                                    <span class="custom-option-header">
+                                      <span class="text-primary">Stocker dans une autre base de données !</span>
+                                    </span>
+                                  </label>
+
+                                  <div class="custom-option-body px-3 pb-3 form-control-sm">
+                                    <div class="row">
+                                      <div class="col-md-6">
+                                        <label for="tabName">Table</label>
+                                        <input
+                                          id="tabName"
+                                          type="text"
+                                          name="tabName"
+                                          class="form-control form-control-sm px-2 container-xxl border-1"
+                                          placeholder="nom de la table..."
+                                          aria-label="nom de la table..."
+                                        />
+                                      </div>
+                                      <div class="col-md-6">
+                                        <label for="tabName">Base de données</label>
+                                        <select
+                                          onchange="onSelectTable()"
+                                          id="selectLiveTableSearch"
+                                          class="selectpicker form-control form-control-sm"
+                                          data-style="btn-default"
+                                          data-live-search="true"
+                                        >
+                                          <option class="form-control-sm pb-0" value="" style="color: rgb(169, 165, 165);">Selectionner la base de données</option>
+                                          <% db_table.forEach(table=> { %>
+                                            <option class="form-control-sm pb-0" value="<%= table.table_name %>">
+                                                <%= table.table_name %>
+                                            </option>
+                                          <% }); %>   
+                                        </select>
+                                      </div>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-primary mt-2" disabled>Valider</button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+
+                            <!-- <div class="row">
+                              <div class="col-lg-6">
+                                <div class="card">
+                                  <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                        Hello
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              <div class="col-lg-6">
+                                <div class="card">
+                                  <div class="card-body">
+                                    <div class="d-flex justify-content-between">
+                                      Hello
+                                  </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div> -->
+                          </div>
+
+                          <div id="resultQuery"></div>
                         </div>
                       </div>
                     </div>
@@ -350,7 +416,7 @@
             .then(response => response.json())
             .then((data) => {
               checkSyntax.style.display = "block";
-              checkSyntax.textContent = data.check_value ? 'Requete SQL Valide !' : 'Requete SQL Invalide !';
+              checkSyntax.textContent = data.check_value ? 'Requête SQL Valide !' : 'Requête SQL Invalide !';
               checkSyntax.style.color = data.check_value ? '#45a049' : '#fc2f18';
               btnSubmitQuery.disabled = data.check_value ? false : true;
             })
@@ -363,6 +429,14 @@
         }
       }, "300");
     }
+
+
+    $('#submitQuery').click(function () {
+      var sectionTo = $(this).attr('href');
+      $('html, body').animate({
+        scrollTop: $(sectionTo).offset().top
+      }, 200);
+    });
 
 
     document.getElementById('submitQuery').addEventListener('click', () => {

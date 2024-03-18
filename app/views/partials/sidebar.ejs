@@ -61,4 +61,22 @@
     if(URL_data === "backup"){
         document.getElementById("backup").className = "menu-item active"
     }
+
+    //#####################################################################
+    //#####################################################################
+    function validateDatabaseName(name) {
+      const regex = /^[a-zA-Z0-9_-]+$/;
+      if (!regex.test(name)) { return false; }
+      if (!/^[a-zA-Z]/.test(name)) { return false; }
+      if (name.length < 3 || name.length > 30) { return false; }
+      return true;
+    }
+
+    function validateTableName(name) {
+      const regex = /^[a-zA-Z0-9_]+$/;
+      if (!regex.test(name)) { return false; }
+      if (!/^[a-zA-Z]/.test(name)) { return false; }
+      if (name.length < 3 || name.length > 30) { return false; }
+      return true;
+    }
 </script>

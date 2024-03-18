@@ -160,7 +160,7 @@
 
               <div class="card">
                 <div class="row m-2 mb-0">
-                  <textarea  oninput="onWriteSQL()" placeholder="SELECT * FROM table_name;" class="form-control p-2" id="queryTextarea" rows="3"></textarea>
+                  <textarea placeholder="SELECT * FROM table_name;" class="form-control p-2" id="queryTextarea" rows="3"></textarea>
                 </div>
                 
                 <div class="m-2">
@@ -185,7 +185,7 @@
                         <div id="check_syntax" class="text-end p-1"></div>
                       </div>
 
-                      <div id="accordionIcon-1" class="accordion-collapse collapse show" data-bs-parent="#accordionIcon">
+                      <div id="accordionIcon-1" class="accordion-collapse collapse" data-bs-parent="#accordionIcon">
                         <div class="accordion-body px-0 py-2">
                           <div id="table-container" class="table-responsive text-nowrap">
                             <table id="data-table" class="table table-hover border-top">
@@ -204,40 +204,23 @@
 
                           <div class="rounded-1 mt-2">
                             <div class="row">
-                              <div class="col-md-5">
-                                <div class="form-check custom-option custom-option-basic border-0 shadow-sm">
-                                  <label class="form-check-label custom-option-content pt-1 pb-0 rounded-1" for="savaCurrBD">
-                                    <input name="customRadioTemp" class="form-check-input" type="radio" value="" id="savaCurrBD" checked/>
-                                    <span class="custom-option-header">
-                                      <span class="text-primary">Stocker dans la base de données actuelle !</span>
-                                    </span>
-                                  </label>
+                              <div class="">
+                                <div class="form-check custom-option custom-option-basic border-0 px-2">
+                                  <div class="text-primary">Stocker le résultat dans une base de données !</div>
 
-                                  <div class="custom-option-body px-3 pb-3 form-control-sm">
-                                    <label for="tabName">Table</label>
-                                    <input
-                                      id="tabName"
-                                      type="text"
-                                      name="tabName"
-                                      class="form-control form-control-sm px-2 container-xxl border-1"
-                                      placeholder="nom de la table..."
-                                      aria-label="nom de la table..."
-                                    />
-                                    <button type="button" class="btn btn-sm btn-primary mt-2" disabled>Valider</button>
-                                  </div>
-                                </div>
-                              </div>
-                              <div class="col-md-7">
-                                <div class="form-check custom-option custom-option-basic border-0 shadow-sm">
-                                  <label class="form-check-label custom-option-content pt-1 pb-0 rounded-1" for="savaExtBD">
-                                    <input name="customRadioTemp" class="form-check-input" type="radio" value="" id="savaExtBD"/>
-                                    <span class="custom-option-header">
-                                      <span class="text-primary">Stocker dans une autre base de données !</span>
-                                    </span>
-                                  </label>
-
-                                  <div class="custom-option-body px-3 pb-3 form-control-sm">
+                                  <div class="custom-option-body form-control-sm p-0 mt-1">
                                     <div class="row">
+                                      <div class="col-md-6">
+                                        <label for="tabName">Base de données</label>
+                                        <select id="selectDataBase" class="selectpicker form-control form-control-sm" data-style="btn-default" data-live-search="true">
+                                          <option class="form-control-sm pb-0" value="" style="color: rgb(169, 165, 165);">Selectionner la base de données</option>
+                                          <% user_clusters.forEach(cluster=> { %>
+                                            <option class="form-control-sm pb-0" value="<%= cluster.id %>">
+                                                <%= cluster.database %>
+                                            </option>
+                                          <% }); %> 
+                                        </select>
+                                      </div>
                                       <div class="col-md-6">
                                         <label for="tabName">Table</label>
                                         <input
@@ -249,53 +232,24 @@
                                           aria-label="nom de la table..."
                                         />
                                       </div>
-                                      <div class="col-md-6">
-                                        <label for="tabName">Base de données</label>
-                                        <select
-                                          onchange="onSelectTable()"
-                                          id="selectLiveTableSearch"
-                                          class="selectpicker form-control form-control-sm"
-                                          data-style="btn-default"
-                                          data-live-search="true"
-                                        >
-                                          <option class="form-control-sm pb-0" value="" style="color: rgb(169, 165, 165);">Selectionner la base de données</option>
-                                          <% db_table.forEach(table=> { %>
-                                            <option class="form-control-sm pb-0" value="<%= table.table_name %>">
-                                                <%= table.table_name %>
-                                            </option>
-                                          <% }); %>   
-                                        </select>
-                                      </div>
                                     </div>
-                                    <button type="button" class="btn btn-sm btn-primary mt-2" disabled>Valider</button>
+                                  </div>
+
+                                  <div class="mt-2 d-flex items-center justify-content-between">
+                                    <div class="rounded-1 p-1 bg-white shadow-sm w-md">
+                                      <button type="button"
+                                        id="btnSaveQuery"
+                                        onclick="onSaveQuery()" 
+                                        class="btn btn-sm btn-primary" 
+                                        disabled>Sauvegarder
+                                      </button>
+                                    </div>
+                                    <div id="check_save" class="text-end p-1"></div>
                                   </div>
                                 </div>
                               </div>
                             </div>
-
-
-                            <!-- <div class="row">
-                              <div class="col-lg-6">
-                                <div class="card">
-                                  <div class="card-body">
-                                    <div class="d-flex justify-content-between">
-                                        Hello
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                              <div class="col-lg-6">
-                                <div class="card">
-                                  <div class="card-body">
-                                    <div class="d-flex justify-content-between">
-                                      Hello
-                                  </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div> -->
                           </div>
-
                           <div id="resultQuery"></div>
                         </div>
                       </div>
@@ -348,6 +302,8 @@
   </body>
 
   <script>
+    //###############################################################################
+    //###############################################################################
     function onSelectTable() {
       tableName = { table_name: document.getElementById('selectLiveTableSearch').value }
 
@@ -390,28 +346,29 @@
     }
 
 
+    //###############################################################################
+    //###############################################################################
     function addNewChar(character) {
       var textarea = document.getElementById('queryTextarea');
       var currentValue = textarea.value;
-      var newValue = currentValue + " " + character;
+      var newValue = currentValue + " " + character + " ";
       textarea.value = newValue;
     }
 
 
     let timeout;
-    function onWriteSQL() {
-      const sqlQueryArea = document.getElementById('queryTextarea');
+    document.getElementById('queryTextarea').addEventListener('input', function (event) {
       const checkSyntax = document.getElementById('check_syntax');
       const btnSubmitQuery = document.getElementById('submitQuery');
       checkSyntax.style.display = "none";
 
       clearTimeout(timeout);
       timeout = setTimeout(() => {
-        if (sqlQueryArea.value.trim() !== '') {
+        if (event.target.value.trim() !== '') {
           fetch('/data/check_query', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sqlQuery: sqlQueryArea.value.trim() })
+            body: JSON.stringify({ sqlQuery: event.target.value.trim() })
           })
             .then(response => response.json())
             .then((data) => {
@@ -427,8 +384,8 @@
           checkSyntax.style.display = "none";
           btnSubmitQuery.disabled = true;
         }
-      }, "300");
-    }
+      }, 300);
+    })
 
 
     $('#submitQuery').click(function () {
@@ -437,7 +394,6 @@
         scrollTop: $(sectionTo).offset().top
       }, 200);
     });
-
 
     document.getElementById('submitQuery').addEventListener('click', () => {
       document.getElementById('accordionIcon-1').className = "accordion-collapse collapse show";
@@ -480,14 +436,6 @@
 
               document.getElementById('table-header-view').innerHTML = tableHeader;
               document.getElementById('table-body-view').innerHTML = tableRows;
-
-              const thElements = document.querySelectorAll('#table-header-view th');
-              thElements.forEach(th => {
-                th.addEventListener('click', () => {
-                  const column = th.textContent;
-                  addNewChar(tableName.table_name + `.` + column)
-                });
-              });
             }
             else {
               document.getElementById("#noViewTab").style.display = 'flex';
@@ -500,6 +448,55 @@
     }
 
 
+    //###############################################################################
+    //###############################################################################
+    let timeoutSave
+    document.getElementById('tabName').addEventListener('input', function (event) {
+      clearTimeout(timeoutSave);
+      timeoutSave = setTimeout(() => {
+        if (event.target.value !== "" && document.getElementById('selectDataBase').value !== "") {
+          if (validateTableName(event.target.value)) {
+            document.getElementById('btnSaveQuery').disabled = false;
+            document.getElementById('check_save').style.color = '#45a049';
+            document.getElementById('check_save').textContent = "Champ de table valide !";
+          } else {
+            document.getElementById('btnSaveQuery').disabled = true;
+            document.getElementById('check_save').style.color = '#fc2f18';
+            document.getElementById('check_save').textContent = "Champ de table invalide !";
+          }
+        } else {
+          document.getElementById('btnSaveQuery').disabled = true;
+          document.getElementById('check_save').style.color = '#fc2f18';
+          document.getElementById('check_save').textContent = "Champs invalide !";
+        }
+      }, 300);
+    });
+
+
+    function onSaveQuery(resultQuery) {
+      const dataView = {
+        viewName: document.getElementById('tabName').value,
+        queryContent: document.getElementById('queryTextarea').value,
+        clusterId: document.getElementById('selectDataBase').value,
+      }
+
+      fetch('/data/createTable', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'usr-auth-token': adminToken, },
+        body: JSON.stringify(dataView),
+      })
+        .then(response => response.json())
+        .then((result) => {
+          if (result.data) { 
+            window.location.reload();
+          }
+        })
+        .catch((error) => { console.log(error); });
+    }
+
+
+    //###############################################################################
+    //###############################################################################
     function onDecoCluster() {
       fetch('/data/logoutCluster', {
         method: 'POST',

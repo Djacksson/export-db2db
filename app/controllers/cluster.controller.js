@@ -6,7 +6,7 @@ class UserController {
         try {
             return await prisma.cluster.create({ data: data })
         } catch (error) {
-            console.error('Erreur to insert ActiviteProjet :', error);
+            console.error('Erreur to insert cluster :', error);
         }
     };
 
@@ -14,7 +14,7 @@ class UserController {
         try {
             return await prisma.cluster.update({ where: { id: data.id }, data: data });
         } catch (error) {
-            console.error('Erreur to update ActiviteProjet :', error);
+            console.error('Erreur to update cluster :', error);
             throw error;
         }
     };
@@ -23,7 +23,7 @@ class UserController {
         try {
             return await prisma.cluster.findMany()
         } catch (error) {
-            console.error('Erreur to get ActiviteProjet :', error);
+            console.error('Erreur to get cluster :', error);
             throw error;
         }
     }
@@ -32,7 +32,7 @@ class UserController {
         try {
             return await prisma.cluster.delete({ where: { id: dataID } })
         } catch (error) {
-            console.error('Erreur to delete ActiviteProjet :', error);
+            console.error('Erreur to delete cluster :', error);
             throw error;
         }
     };
@@ -41,7 +41,7 @@ class UserController {
         try {
             return await prisma.cluster.findUnique({ where: { id: dataID }, })
         } catch (error) {
-            console.error('Erreur to get ActiviteProjet by Id:', error);
+            console.error('Erreur to get cluster by Id:', error);
             throw error;
         }
     };
@@ -54,6 +54,17 @@ class UserController {
             throw error;
         }
     };
+
+    //####################################################################
+    //####################################################################
+    async InsertRequest(data) {
+        try {
+            return await prisma.request_Register.create({ data: data })
+        } catch (error) {
+            console.error('Erreur to insert cluster request :', error);
+        }
+    };
+
 }
 
 module.exports = UserController;

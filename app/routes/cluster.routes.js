@@ -1,7 +1,7 @@
 require('dotenv').config()
 const express = require('express');
 const router = express.Router();
-const { exportView, importView } = require('../funcs/view-func');
+const { exportView, importView, importTable, createTable } = require('../funcs/view-func');
 const { LocalStorage } = require('node-localstorage');
 const localStorage = new LocalStorage('./scratch');
 const mysql = require('mysql');
@@ -116,6 +116,7 @@ router.post('/getTableCluster', async (req, res) => {
     sourceConnection.end();
 })
 
+
 //###########################################################
 router.post('/check_query', async (req, res) => {
     try {
@@ -148,28 +149,94 @@ router.post('/executeQuery', async (req, res) => {
 
 
 router.post('/createView', async (req, res) => {
-    console.log(req.body);
+    try {
+        cluster = await classController.GetDataById(req.body.clusterId)
+        if (cluster) {
+            const sourceConfig = {
+                host: cluster.host,
+                user: cluster.user,
+                password: cluster.password,
+                database: cluster.database
+            }
 
-    const sourceConfig = JSON.parse(localStorage.getItem('sourceConfig_JSON'));
-    const sourceConnection = mysql.createConnection(sourceConfig.dataConfig);
-    // const destinationConnection = mysql.createConnection(sourceConfig.dataConfig);
+            destinationConnection = mysql.createConnection(sourceConfig);
+            const createViewQuery = `CREATE OR REPLACE VIEW view_${req.body.viewName} AS SELECT * FROM (${req.body.queryContent}) AS ${req.body.viewName}_data`;
+            destinationConnection.query(createViewQuery, async (err, resultView) => {
+                if (err) {
+                    return res.status(500).json({ message: 'Internal Server Error' });
+                }
 
-    // Create a view with the retrieved data
-    const createViewQuery = `CREATE OR REPLACE VIEW ${req.body.viewName}_view AS SELECT * FROM (${req.body.queryContent}) AS ${req.body.viewName}_data`;
-    sourceConnection.query(createViewQuery, (err, resultView) => {
-        if (err) {
-            return res.status(500).json({ message: 'Internal Server Error' });
+                const dataRequest = {
+                    viewName: req.body.viewName,
+                    queryContent: req.body.queryContent,
+                    database: cluster.database,
+                    userId: cluster.userId,
+                    clusterId: cluster.id,
+                }
+
+                await classController.InsertRequest(dataRequest);
+                return res.json({ message: 'Query successfully saved !', data: resultView });
+            });
+            destinationConnection.end();
         }
-        console.log('View created: acteur_view', resultView);
-        return res.json({ message: 'All Column !', data: resultView });
-    });
-    sourceConnection.end();
+        return res.json({ message: 'Cluster not found !', data: null });
+
+    } catch (error) {
+        console.log(error);
+        return res.json({ message: 'Query not saved !', data: null });
+    }
 })
 
 
-router.post('/transfertData', async (req, res) => {
-    console.log(req.body);
+router.post('/createTable', async (req, res) => {
+    try {
+        const sourceConfig = JSON.parse(localStorage.getItem('sourceConfig_JSON'));
+        const sourceConnection = mysql.createConnection(sourceConfig.dataConfig);
 
+        cluster = await classController.GetDataById(req.body.clusterId);
+        const destinationConnection = mysql.createConnection({ host: cluster.host, user: cluster.user, password: cluster.password, database: cluster.database });
+
+        sourceConnection.query(req.body.queryContent, async (error, resData) => {
+            if (error) {
+                return res.status(500).json({ message: 'Internal Server Error' });
+            }
+
+            // const columns = Object.keys(resData[0]);
+            // console.log('resul',columns);
+
+            await createTable(sourceConnection, destinationConnection, req.body.viewName, async (err, resTab) => {
+                if (err) {
+                    console.log(err);
+                    return res.status(500).json({ message: 'Internal Server Error to import Data' });
+                }
+
+                await importTable(destinationConnection, req.body.viewName, resData, async (err, result) => {
+                    if (err) {
+                        console.log(err);
+                        return res.status(500).json({ message: 'Internal Server Error to import Data' });
+                    }
+
+                    await classController.InsertRequest({
+                        viewName: req.body.viewName,
+                        queryContent: req.body.queryContent,
+                        database: cluster.database,
+                        userId: cluster.userId,
+                        clusterId: cluster.id,
+                    });
+                    return res.json({ message: 'Query successfully saved !', data: result });
+                });
+            });
+            destinationConnection.end()
+        });
+        sourceConnection.end();
+    } catch (error) {
+        console.log(error);
+        return res.json({ message: 'Query not saved !', data: null });
+    }
+});
+
+
+router.post('/transfertData', async (req, res) => {
     const sourceConfig = JSON.parse(localStorage.getItem('sourceConfig_JSON'));
     const sourceConnection = mysql.createConnection(sourceConfig.dataConfig);
     const destinationConnection = mysql.createConnection(sourceConfig.dataConfig);

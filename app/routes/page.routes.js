@@ -4,8 +4,11 @@ const { exportView, importView } = require('../funcs/view-func');
 const { LocalStorage } = require('node-localstorage');
 const localStorage = new LocalStorage('./scratch');
 const mysql = require('mysql');
-const { Parser } = require('node-sql-parser');
-const parser = new Parser();
+
+const UserController = require('../controllers/user.controller');
+const ClusterController = require('../controllers/cluster.controller');
+const classUser = new UserController();
+const classCluster = new ClusterController();
 
 router.get('/', (req, res) => res.render('index'));
 router.get('/dashboard', (req, res) => res.render('dashboard'));
@@ -19,11 +22,19 @@ router.get('/request', (req, res) => {
         const sourceConnection = mysql.createConnection(sourceConfig.dataConfig);
         const query = "SELECT table_name FROM information_schema.tables WHERE table_schema = ?";
 
-        sourceConnection.query(query, [sourceConnection.config.database], (err, results) => {
+        sourceConnection.query(query, [sourceConnection.config.database], async (err, results) => {
             if (err) {
                 return res.json({ message: 'Error connecting to MySQL database:', err });
             }
-            return res.render('request', { clusterId: sourceConfig.clusterId, db_name: sourceConfig.dataConfig.database, db_table: results });
+
+            await classCluster.GetDataById(sourceConfig.clusterId)
+                .then(async (cluster) => {
+                    user = await classUser.GetDataById(cluster.userId)
+                    return res.render('request', { user_clusters: user.clusters, clusterId: sourceConfig.clusterId, db_name: sourceConfig.dataConfig.database, db_table: results });
+                })
+                .catch((err) => {
+                    return res.render('request', { user_clusters: [], clusterId: sourceConfig.clusterId, db_name: sourceConfig.dataConfig.database, db_table: results });
+                })
         });
         sourceConnection.end();
     } catch (error) {
